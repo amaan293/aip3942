@@ -1,6 +1,5 @@
 import csv
 import random
-from collections import Counter
 
 # Manhattan distance function
 def manhattan_distance(row1, row2):
@@ -32,14 +31,28 @@ def knn_predict(test_row, train_data, k=3):
         distances.append((dist, train_row[1]))
     distances.sort(key=lambda x: x[0])
     k_nearest = distances[:k]
+   
+    
     labels = [label for _, label in k_nearest]
+
+# Manual counting without using Counter
+    label_counts = {}
+    for label in labels:
+        if label in label_counts:
+            label_counts[label] += 1
+        else:
+            label_counts[label] = 1
+
+# Find the label with the highest count
+    most_common = max(label_counts.items(), key=lambda x: x[1])[0]
+
+    
     
     print(f"\nTest sample: {test_row}")
     print("Manhattan Distances from training points:")
     for d, l in k_nearest:
         print(f"Distance: {d:.2f}, Label: {l}")
-        
-    most_common = Counter(labels).most_common(1)[0][0]
+
     return most_common
 
 # Main

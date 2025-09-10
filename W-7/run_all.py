@@ -24,7 +24,6 @@ def plot_metrics_comparison(metrics_linear, metrics_quad, title="Linear vs Quadr
     labels = list(metrics_linear.keys())
     linear_vals = list(metrics_linear.values())
     quad_vals = list(metrics_quad.values())
-
     x = range(len(labels))
     plt.figure(figsize=(8,5))
     plt.bar([i-0.15 for i in x], linear_vals, width=0.3, label="Linear 1k")
@@ -38,7 +37,6 @@ def plot_metrics_comparison(metrics_linear, metrics_quad, title="Linear vs Quadr
 
 def main():
     data_dir = r"D:\aip3942\W-7\mnist_dataset"
-
     X_train_img, y_train, X_test_img, y_test = load_mnist(data_dir)
     X_train, X_test = preprocess(X_train_img), preprocess(X_test_img)
     X_tr, y_tr, X_val, y_val = stratified_split(X_train, y_train, val_ratio=0.1)
@@ -51,7 +49,6 @@ def main():
     W_lin_small, b_lin_small, classes_lin_small = train_linear_svm(
         X_lin_small, y_lin_small, C=1.0, lr=1e-3, epochs=5
     )
-
     metrics_linear_1k_train = evaluate_and_print("Train (Linear 1k)", X_lin_small, y_lin_small,
                                                  predict_linear_svm, (W_lin_small, b_lin_small, classes_lin_small))
     metrics_linear_1k_val = evaluate_and_print("Val   (Linear 1k)", X_val, y_val,
@@ -65,7 +62,6 @@ def main():
     alphas, b_quad, classes_quad, K_train, degree, X_tr_quad, y_tr_quad = train_quadratic_svm(
         X_quad_train, y_quad_train, C=1.0, lr=1e-4, epochs=20, degree=2
     )
-
     metrics_quad_1k_train = evaluate_and_print("Train (Quadratic 1k)", X_quad_train, y_quad_train,
                                                predict_quadratic_svm, (alphas, b_quad, classes_quad, degree, X_tr_quad, y_tr_quad))
     metrics_quad_1k_val = evaluate_and_print("Val   (Quadratic 1k)", X_val, y_val,
@@ -106,5 +102,52 @@ def main():
     print("\nPlotting Linear 1k vs Quadratic 1k metrics...")
     plot_metrics_comparison(metrics_linear_1k_test, metrics_quad_1k_test)
 
+    print("\nEvaluating Linear SVM with different C values: ")
+    metrics_vs_C_lin = {C: {} for C in C_values}
+    for C in C_values:
+        W, b, classes = train_linear_svm(X_tr, y_tr, C=C, lr=1e-3, epochs=5)
+        y_val_pred = predict_linear_svm(X_val, W, b, classes)
+        metrics_vs_C_lin[C] = {
+            'Accuracy': accuracy(y_val, y_val_pred),
+            'Precision': precision(y_val, y_val_pred),
+            'Recall': recall(y_val, y_val_pred),
+            'F1': f1_score(y_val, y_val_pred)
+        }
+        print(f"Linear C={C}: {metrics_vs_C_lin[C]}")
+    plt.figure(figsize=(8,6))
+    for metric in ['Accuracy', 'Precision', 'Recall', 'F1']:
+        plt.plot(C_values, [metrics_vs_C_lin[C][metric] for C in C_values], marker='o', label=metric)
+    plt.xscale("log")
+    plt.xlabel("C (log scale)")
+    plt.ylabel("Score")
+    plt.title("Linear SVM Metrics vs C (Validation Set)")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+    print("\nEvaluating Quadratic SVM with different C values: ")
+    metrics_vs_C_quad = {C: {} for C in C_values}
+    for C in C_values:
+        alphas, b_q, classes_q, _, degree, Xq, yq = train_quadratic_svm(
+            X_quad_train, y_quad_train, C=C, lr=1e-4, epochs=20, degree=2
+        )
+        y_val_pred = predict_quadratic_svm(X_val, alphas, b_q, classes_q, degree, Xq, yq)
+        metrics_vs_C_quad[C] = {
+            'Accuracy': accuracy(y_val, y_val_pred),
+            'Precision': precision(y_val, y_val_pred),
+            'Recall': recall(y_val, y_val_pred),
+            'F1': f1_score(y_val, y_val_pred)
+        }
+        print(f"Quadratic C={C}: {metrics_vs_C_quad[C]}")
+    plt.figure(figsize=(8,6))
+    for metric in ['Accuracy', 'Precision', 'Recall', 'F1']:
+        plt.plot(C_values, [metrics_vs_C_quad[C][metric] for C in C_values], marker='o', label=metric)
+    plt.xscale("log")
+    plt.xlabel("C (log scale)")
+    plt.ylabel("Score")
+    plt.title("Quadratic SVM Metrics vs C (Validation Set)")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
 main()

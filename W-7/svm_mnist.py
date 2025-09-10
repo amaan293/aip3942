@@ -49,7 +49,7 @@ def train_linear_svm(X, y, C=1.0, lr=1e-3, epochs=5):
                     b[ci] += lr * C * yi_c
                 else:
                     W[ci] = (1 - lr) * W[ci]
-        print(f"Linear SVM Epoch {epoch+1}/{epochs} completed")
+        print(f"Linear SVM {epoch+1}/{epochs} ")
 
     return W, b, classes
 
@@ -77,7 +77,7 @@ def train_quadratic_svm(X, y, C=1.0, lr=1e-4, epochs=20, degree=2):
                 decision = np.sum(alphas[ci] * (np.where(y == c, 1, -1)) * K[:, i])
                 grad = 1 - yi_c * decision
                 alphas[ci, i] = np.clip(alphas[ci, i] + lr * grad, 0, C)
-        print(f"Quadratic SVM Epoch {epoch+1}/{epochs} completed")
+        print(f"Quadratic SVM {epoch+1}/{epochs} ")
 
     for ci, c in enumerate(classes):
         yi_c = np.where(y == c, 1, -1)
